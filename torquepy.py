@@ -1,5 +1,7 @@
 import subprocess
 import json
+import xml.etree.ElementTree as ET
+import datetime
 
 
 class TorqueManager:
@@ -57,12 +59,11 @@ class TorqueManager:
     def get_list_of_user():
         list_name_user_json = []
         list_name_user = []
-        result = subprocess.run(['qstat', '-a'], capture_output=True)
-        result_list = result.stdout.decode().split('\n')
-        if len(result_list) < 6:
-            return list_name_user_json
-        for i in range(5, len(result_list) - 1):
-            list_name_user.append(list(filter(lambda x: x != "", result_list[i].split(" ")))[1])
+        result = subprocess.run(['qstat', '-fx'], capture_output=True)
+        result = result.stdout.decode()
+        root = ET.fromstring(result)
+        for job in root.findall('Job'):
+            list_name_user.append(job.find('euser').text)
         list_name_user = list(set(list_name_user))
         for user in list_name_user:
             param = '-u ' + user
@@ -72,6 +73,25 @@ class TorqueManager:
             list_name_user_json.append(user_json)
         return list_name_user_json
 
+    @staticmethod
+    def get_last_job_id():
+        result = subprocess.run(['qstat', '-fx'], capture_output=True)
+        result = result.stdout.decode()
+        root = ET.fromstring(result)
+        return root.findall('Job')[len(root.findall('Job')) - 1].find('Job_Id').text
 
+    @staticmethod
+    def get_info_job_id(job_id):
 
-
+        result = subprocess.run(['qstat', '-fx', '{}'.format(job_id)], capture_output=True)
+        result = result.stdout.decode()
+        root = ET.fromstring(result)
+        job_json = {"job_id": root[0].find('Job_Id').text,
+                    "job_name": root[0].find('Job_Name').text,
+                    "job_owner": root[0].find('Job_Owner').text,
+                    "queue": root[0].find('queue').text,
+                    "comment": root[0].find('comment').text,
+                    "time": datetime.datetime.fromtimestamp(int(root[0].find('ctime').text)).strftime(
+                        "%Y-%m-%d %H:%M:%S")
+                    }
+        return job_json

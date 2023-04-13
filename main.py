@@ -27,12 +27,11 @@ if __name__ == '__main__':
                 if not(queue in list_name_of_queue):
                     count_of_queue.clear()
         if len(list_of_user) < len(list_name_of_user):
-            for user in list_of_user:
-                if not (user in list_name_of_user):
-                    count_of_user.clear()
+            count_of_user.clear()
 
         list_name_of_queue.clear()
         list_name_of_user.clear()
+
         for queue in list_of_queue:
             list_name_of_queue.append(queue["name"])
             count_of_queue.labels(queue["name"]).set(queue["tasks"])
