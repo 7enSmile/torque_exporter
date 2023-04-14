@@ -74,11 +74,14 @@ class TorqueManager:
         return list_name_user_json
 
     @staticmethod
-    def get_last_job_id():
+    def get_list_job_id():
+        list_job_id = []
         result = subprocess.run(['qstat', '-fx'], capture_output=True)
         result = result.stdout.decode()
         root = ET.fromstring(result)
-        return root.findall('Job')[len(root.findall('Job')) - 1].find('Job_Id').text
+        for job in root.findall('Job'):
+            list_job_id.append(job.find('Job_Id').text)
+        return list_job_id
 
     @staticmethod
     def get_info_job_id(job_id):
@@ -95,3 +98,4 @@ class TorqueManager:
                         "%Y-%m-%d %H:%M:%S")
                     }
         return job_json
+
